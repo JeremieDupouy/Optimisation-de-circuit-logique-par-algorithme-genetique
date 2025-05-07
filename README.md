@@ -81,5 +81,6 @@ Edit
 
 `ocamlc -package graphics -package unix -linkpkg your_project.ml -o circuit_opt
 ./circuit_opt`
+
 Si vous êtes sous WSL, pensez à lancer un serveur X (ex. : VcXsrv) avec Disable access control activé.
 
