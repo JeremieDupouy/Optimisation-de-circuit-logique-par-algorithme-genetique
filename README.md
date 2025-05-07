@@ -45,6 +45,8 @@ Mutation : Changement local (porte, branche, variable…).
 
 Nouvelle génération : Sélection des individus conservés en fonction d une heuristique plus fine.
 
+---
+
 **🖼 Affichage graphique**
 
 Utilise le module OCaml Graphics pour dessiner les circuits :
@@ -53,11 +55,15 @@ Les formules sont affichées sous forme de boîtes reliées par des lignes.
 
 Un placement en grille ajuste automatiquement la taille des formules pour éviter les chevauchements.
 
+---
+
 **🛠 Dépendances**
 
 OCaml (>= 4.14 recommandé)
 Module Graphics et Unix
 Compatible avec Linux/WSL + X Server (ex. : XLaunch)
+
+---
 
 **🚀 Exécution**
 
