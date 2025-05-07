@@ -60,17 +60,26 @@ Un placement en grille ajuste automatiquement la taille des formules pour évite
 **🛠 Dépendances**
 
 OCaml (>= 4.14 recommandé)
+
 Module Graphics et Unix
+
 Compatible avec Linux/WSL + X Server (ex. : XLaunch)
+
+installation de Cryptominisat, sat solver libre
 
 ---
 
 **🚀 Exécution**
 
 bash
+
 Copy
+
 Edit
-ocamlc -package graphics -package unix -linkpkg your_project.ml -o circuit_opt
-./circuit_opt
+
+`apt install Cryptominisat`
+
+`ocamlc -package graphics -package unix -linkpkg your_project.ml -o circuit_opt
+./circuit_opt`
 Si vous êtes sous WSL, pensez à lancer un serveur X (ex. : VcXsrv) avec Disable access control activé.
 
