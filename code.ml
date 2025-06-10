@@ -1,7 +1,6 @@
 
 open Graphics;;
 
-(* Définission des types *)
 type variable = int;;
 type formula = 
   | Top
@@ -16,9 +15,102 @@ type formula =
   | Xor of formula * formula
   | Nor of formula * formula
   | Xnor of formula * formula;;
+(*(* Taille et positions *)
+let gate_width = 50;;
+let gate_height = 30;;
+let margin = 20;;
+let input_spacing = 40;;
 
-(* Fonctions d'affichage *)
-(* Calcule la largeur d'une formule *)
+(* Dessin d'un composant logique *)
+let draw_gate x y label =
+  moveto (x - gate_width / 2) (y - gate_height / 2);
+  lineto (x + gate_width / 2) (y - gate_height / 2);
+  lineto (x + gate_width / 2) (y + gate_height / 2);
+  lineto (x - gate_width / 2) (y + gate_height / 2);
+  lineto (x - gate_width / 2) (y - gate_height / 2);
+  moveto (x - 10) (y - 5);
+  draw_string label;;
+
+(* Dessin des connexions entre les composants *)
+let draw_connection (x1, y1) (x2, y2) =
+  moveto x1 y1;
+  lineto x2 y2;;
+
+(* Positionnement r?cursif des composants *)
+let rec draw_formula x y spacing formula =
+  match formula with
+  | Top ->
+      draw_gate x y "1"; (x, y)
+  | Bot ->
+      draw_gate x y "0"; (x, y)
+  | Var v ->
+      let label = "x" ^ string_of_int v in
+      draw_gate x y label; (x, y)
+  | Neg f ->
+      let child_x, child_y = draw_formula (x - spacing) y spacing f in
+      draw_gate x y "NOT";
+      draw_connection (child_x, child_y) (x - gate_width / 2, y);
+      (x, y)
+  | And (f1, f2) ->
+      let left_x, left_y = draw_formula (x - spacing) (y + input_spacing) spacing f1 in
+      let right_x, right_y = draw_formula (x - spacing) (y - input_spacing) spacing f2 in
+      draw_gate x y "AND";
+      draw_connection (left_x, left_y) (x - gate_width / 2, y + 10);
+      draw_connection (right_x, right_y) (x - gate_width / 2, y - 10);
+      (x, y)
+  | Or (f1, f2) ->
+      let left_x, left_y = draw_formula (x - spacing) (y + input_spacing) spacing f1 in
+      let right_x, right_y = draw_formula (x - spacing) (y - input_spacing) spacing f2 in
+      draw_gate x y "OR";
+      draw_connection (left_x, left_y) (x - gate_width / 2, y + 10);
+      draw_connection (right_x, right_y) (x - gate_width / 2, y - 10);
+      (x, y)
+  | Nand (f1, f2) ->
+      let left_x, left_y = draw_formula (x - spacing) (y + input_spacing) spacing f1 in
+      let right_x, right_y = draw_formula (x - spacing) (y - input_spacing) spacing f2 in
+      draw_gate x y "NAND";
+      draw_connection (left_x, left_y) (x - gate_width / 2, y + 10);
+      draw_connection (right_x, right_y) (x - gate_width / 2, y - 10);
+      (x, y)
+  | Nor (f1, f2) ->
+      let left_x, left_y = draw_formula (x - spacing) (y + input_spacing) spacing f1 in
+      let right_x, right_y = draw_formula (x - spacing) (y - input_spacing) spacing f2 in
+      draw_gate x y "NOR";
+      draw_connection (left_x, left_y) (x - gate_width / 2, y + 10);
+      draw_connection (right_x, right_y) (x - gate_width / 2, y - 10);
+      (x, y)
+  | Xor (f1, f2) ->
+      let left_x, left_y = draw_formula (x - spacing) (y + input_spacing) spacing f1 in
+      let right_x, right_y = draw_formula (x - spacing) (y - input_spacing) spacing f2 in
+      draw_gate x y "XOR";
+      draw_connection (left_x, left_y) (x - gate_width / 2, y + 10);
+      draw_connection (right_x, right_y) (x - gate_width / 2, y - 10);
+      (x, y)
+  | Xnor (f1, f2) ->
+      let left_x, left_y = draw_formula (x - spacing) (y + input_spacing) spacing f1 in
+      let right_x, right_y = draw_formula (x - spacing) (y - input_spacing) spacing f2 in
+      draw_gate x y "XNOR";
+      draw_connection (left_x, left_y) (x - gate_width / 2, y + 10);
+      draw_connection (right_x, right_y) (x - gate_width / 2, y - 10);
+      (x, y)
+  | Imply (f1, f2) ->
+      let left_x, left_y = draw_formula (x - spacing) (y + input_spacing) spacing f1 in
+      let right_x, right_y = draw_formula (x - spacing) (y - input_spacing) spacing f2 in
+      draw_gate x y "IMPL";
+      draw_connection (left_x, left_y) (x - gate_width / 2, y + 10);
+      draw_connection (right_x, right_y) (x - gate_width / 2, y - 10);
+      (x, y)
+  | Equiv (f1, f2) ->
+      let left_x, left_y = draw_formula (x - spacing) (y + input_spacing) spacing f1 in
+      let right_x, right_y = draw_formula (x - spacing) (y - input_spacing) spacing f2 in
+      draw_gate x y "EQV";
+      draw_connection (left_x, left_y) (x - gate_width / 2, y + 10);
+      draw_connection (right_x, right_y) (x - gate_width / 2, y - 10);
+      (x, y);;
+
+(* Exemple d'utilisation *)*)
+
+(* 1. Calcule la largeur d'une formule *)
 let rec formula_width f =
   match f with
   | Var _ | Top | Bot -> 1
@@ -26,57 +118,36 @@ let rec formula_width f =
   | And (f1, f2) | Or (f1, f2) | Imply (f1, f2) | Equiv (f1, f2)
   | Nand (f1, f2) | Xor (f1, f2) | Nor (f1, f2) | Xnor (f1, f2) ->
       formula_width f1 + formula_width f2
-;;
 
-let rec formula_depth f =
-  match f with
-  | Top | Bot | Var _ -> 1
-  | Neg f1 -> 1 + formula_depth f1
-  | And (f1, f2) | Or (f1, f2) | Imply (f1, f2) | Equiv (f1, f2)
-  | Nand (f1, f2) | Xor (f1, f2) | Nor (f1, f2) | Xnor (f1, f2) ->
-      1 + max (formula_depth f1) (formula_depth f2)
-
-(* Rendu du nom de chaque opérateur *)
+(* 2. Rendu du nom de chaque op�rateur *)
 let string_of_formula = function
-  | Top -> "⊤"
-  | Bot -> "⊥"
+  | Top -> "?"
+  | Bot -> "?"
   | Var n -> "x" ^ string_of_int n
-  | Neg _ -> "¬"
+  | Neg _ -> "�"
   | And _ -> "AND"
   | Or _ -> "OR"
-  | Imply _ -> "→"
-  | Equiv _ -> "≡"
+  | Imply _ -> "?"
+  | Equiv _ -> "?"
   | Nand _ -> "NAND"
   | Xor _ -> "XOR"
   | Nor _ -> "NOR"
   | Xnor _ -> "XNOR"
-;;
 
-(* Fonctions de tracé *)
-let draw_gate x y label =
-  let w, h = 40, 20 in
-  draw_rect (x - w / 2) (y - h / 2) w h;
-  moveto (x - 10) (y - 5);
-  draw_string label
-;;
-
-let draw_connection x1 y1 x2 y2 =
-  moveto x1 y1;
-  lineto x2 y2
-;;
-
-(* 3. Affichage récursif avec placement horizontal équilibré *)
+(* 3. Affichage r�cursif avec placement horizontal �quilibr� *)
 let rec draw_formula f x y x_scale y_spacing =
   let node_width = 40 and node_height = 20 in
   let box_x = x - node_width / 2 in
   let box_y = y - node_height / 2 in
 
-  draw_gate x y (string_of_formula f);
+  draw_rect box_x box_y node_width node_height;
+  moveto (x - 10) (y - 5);
+  draw_string (string_of_formula f);
 
   match f with
   | Var _ | Top | Bot -> ()
   | Neg f1 ->
-      draw_connection x (y - node_height / 2) x (y - y_spacing + node_height / 2);
+      draw_line x (y - node_height / 2) x (y - y_spacing + node_height / 2);
       draw_formula f1 x (y - y_spacing) x_scale y_spacing
   | And (f1, f2) | Or (f1, f2) | Imply (f1, f2) | Equiv (f1, f2)
   | Nand (f1, f2) | Xor (f1, f2) | Nor (f1, f2) | Xnor (f1, f2) ->
@@ -85,90 +156,11 @@ let rec draw_formula f x y x_scale y_spacing =
       let total_w = w1 + w2 in
       let left_x = x - (w2 * x_scale / 2) in
       let right_x = x + (w1 * x_scale / 2) in
-      draw_connection x (y - node_height / 2) left_x (y - y_spacing + node_height / 2);
-      draw_connection x (y - node_height / 2) right_x (y - y_spacing + node_height / 2);
+      draw_line x (y - node_height / 2) left_x (y - y_spacing + node_height / 2);
+      draw_line x (y - node_height / 2) right_x (y - y_spacing + node_height / 2);
       draw_formula f1 left_x (y - y_spacing) x_scale y_spacing;
       draw_formula f2 right_x (y - y_spacing) x_scale y_spacing
-;;
-
-(* Dessine une formule centrée horizontalement autour de x *)
-let draw_formula_centered f x_center y_start x_scale y_spacing =
-  draw_formula f x_center y_start x_scale y_spacing
-;;
-
-(* Affiche plusieurs formules côte à côte dans la fenêtre *)
-let draw_population formulas window_width window_height =
-  let n = List.length formulas in
-  let spacing = 100 in
-  let total_scale = window_width - (n + 1) * spacing in
-
-  (* Largeurs relatives de chaque formule *)
-  let widths = List.map formula_width formulas in
-  let total_width_units = List.fold_left ( + ) 0 widths in
-
-  (* Calcule position horizontale centrée pour chaque formule *)
-  let x_positions =
-    let rec aux acc_x acc = function
-      | [] -> List.rev acc
-      | w :: rest ->
-          let x_center = acc_x + (w * total_scale / total_width_units) / 2 in
-          let next_x = acc_x + (w * total_scale / total_width_units) + spacing in
-          aux next_x (x_center :: acc) rest
-    in
-    aux spacing [] widths
-  in
-
-  (* Dessine toutes les formules avec leurs positions *)
-  List.iter2 (fun f x ->
-    draw_formula_centered f x (window_height - 100) 80 80
-  ) formulas x_positions
-;;
-
-let draw_population_grid_scaled_per_formula formulas win_w win_h =
-  let n = List.length formulas in
-  let cols = int_of_float (ceil (sqrt (float_of_int n))) in
-  let rows = (n + cols - 1) / cols in
-
-  let margin_top = 40 in
-  let margin_bottom = 40 in
-  let vertical_space = win_h - margin_top - margin_bottom in
-
-  let cell_w = win_w / cols in
-  let cell_h = vertical_space / rows in
-
-  let margin_x = 20 in
-  let margin_y = 20 in
-
-  List.iteri (fun idx formula ->
-    let col = idx mod cols in
-    let row = idx / cols in
-
-    (* Coordonnées de la cellule *)
-    let cell_x = col * cell_w in
-    let cell_y = win_h - margin_top - (row + 1) * cell_h in
-    let center_x = cell_x + cell_w / 2 in
-    let center_y = cell_y + cell_h / 2 in
-
-    (* Encadrer la cellule *)
-    set_color (rgb 180 180 180);
-    draw_rect cell_x cell_y cell_w cell_h;
-
-    (* Taille de la formule *)
-    let fw = formula_width formula in
-    let fd = formula_depth formula in
-
-    let scale_x = max 10 ((cell_w - 2 * margin_x) / fw) in
-    let scale_y = max 10 ((cell_h - 2 * margin_y) / fd) in
-
-    set_color black;
-    let height_px = fd * scale_y in
-    let formula_top_y = center_y + height_px / 2 in
-    draw_formula formula center_x formula_top_y scale_x scale_y
-  ) formulas
-;;
-      
-(* Fonctions de conversions de formules logiques, notemment pour les mutations *)
-
+  
 let simplify_nand phi = phi;;
 let simplify_usu phi = phi;;
 let simplify_nor phi = phi;;
@@ -181,12 +173,7 @@ let rec convert_usu phi = match phi with
   |Xor (f1,f2) -> let a = convert_usu f1 in let b = convert_usu f2 in
       And (Or (a,b),Neg (And(a,b)))
   |Xnor (f1,f2) -> Neg ( convert_usu (Xor(f1,f2)))
-  |Neg f -> Neg (convert_usu f)
-  |And (f1,f2) -> And (convert_usu f1, convert_usu f2)
-  |Or (f1,f2) -> Or(convert_usu f1,convert_usu f2)
-  |f->f
-
-;;
+  |psi->psi;;
 
 let convert_nor phi = 
   let rec aux = function
@@ -208,8 +195,11 @@ let convert_nand phi =
   let psi = convert_usu phi in
   simplify_nand (aux psi);;
 
-(* Mise en CNF pour utiliser un Sat solver afin d'évaluer l'équivalence de formules logiques *)
-
+(* D?finir une fonction semblable ? simplify qui : 
+r??crit les -> et <-> uniquement avec des !, /\ et \/
+fait descendre les n?gations jusqu'aux feuilles
+fait descendre les disjonction sous les conjonctions
+*)
 
 let percolate_down phi = 
   let rec aux phi =
@@ -225,8 +215,6 @@ let percolate_down phi =
     |And (f1,f2) -> And (aux f1, aux f2)
     |Or (f1,f2) -> Or (aux f1, aux f2)
     |Neg (Neg f1) -> aux f1
-    |Neg Top -> Bot
-    |Neg Bot -> Top
     |Neg f1 -> Neg (aux f1)
     |Top -> Top
     |Bot -> Bot
@@ -241,81 +229,20 @@ let percolate_down phi =
   done;
   !phi2
 ;; 
-exception ClauseTop;;
-exception CNFBot;;
-exception NotCNF of formula;;
 
-(*conversion d'une cnf dans le format adapté*)
-let convert_cnf phi =
-  let rec convert_cnf_aux phi = match phi with
-  |Bot->[[]]
-  |Top->[]
-  |Var x -> [[x]]
-  |Neg(Var x)->[[-x]]
-  |And(f1,f2)->(convert_cnf_aux f1)@(convert_cnf_aux f2)
-  |Or (f1,f2) -> begin let rec aux f = match f with
-                  |Bot->[]
-                  |Top->raise ClauseTop
-                  |Var x -> [x]
-                  |Neg(Var x)->[-x]
-                  |Or (f3,f4) -> (aux f3)@(aux f4)
-                  |_->failwith"Not CNF"
-                in try [(aux f1)@(aux f2)]
-              with |ClauseTop -> []
-            end
-  |_ -> failwith"Not CNF"
-  in List.map (fun x -> List.sort (fun a b -> compare (abs a) (abs b)) x) (convert_cnf_aux phi)
-;;
-
-let rec simplify_clause c = match c with
-|[]->[]
-|t::q -> begin match q with
-  |[]->[t]
-  |t1::q1 when t1 = t -> simplify_clause (t::q1)
-  |t1::q1 when t1= -t -> raise ClauseTop
-  |t1::q1 -> t::(simplify_clause q)
-end
-;;
-let simplify_cnf cnf = 
-  let ncnf = List.sort compare (List.map (fun x -> try simplify_clause x with |ClauseTop -> [0]) cnf) in
-  let rec aux cnf_a =
-    match cnf_a with
-    |[]->[]
-    |[]::q->raise CNFBot
-    |[0]::q->aux q
-    |t::q -> begin 
-      match q with
-      |[] -> [t]
-      |t1::q1 when t = t1 -> aux (t::q1)
-      |t1::q1 -> t::(aux (t1::q1))
-    end
-  in aux ncnf
-;;
-  
-(*appel du SatSolver Cryptominisat*)
-let sat_solve f n=
-  try
-    let cnf = simplify_cnf (convert_cnf (percolate_down (convert_usu f))) in
-    let fic = open_out "sat_f.cnf" in
-    let l = List.length cnf in
-    output_string fic "p cnf ";
-    output_string fic (string_of_int n);
-    output_string fic " ";
-    output_string fic (string_of_int l);
-    output_string fic "\n";
-    List.iter (fun x->List.iter (fun y -> output_string fic (string_of_int y); output_string fic " ") x; output_string fic "0\n") cnf;
-    flush fic;
-    let output = Unix.open_process_in "cryptominisat --verb 0 sat_f.cnf" in
-    let s = In_channel.input_all output in
-    Unix.close_process_in;
-    print_string s;
-    Sys.remove "sat_f.cnf";
-    Scanf.sscanf s "s %s\n" (fun s -> if (String.equal s "SATISFIABLE") then true else false)
-  with |CNFBot->false
-;;
-
-
-(* Génération d'une formule aléatoire *)
+(*let () =
+  open_graph " 800x600";
+  set_window_title "Circuit Logique";
+  let formula = And (Var 1, Or (Var 2, Neg (Var 3))) in
+  ignore (draw_formula 400 300 100 formula);
+  let formula1 = convert_nand formula in
+  ignore (draw_formula 800 (-200) 100 formula1); 
+  let formula2 = convert_nor formula in
+  ignore (draw_formula 1200 100 100 formula2);
+  ignore(read_key ()); 
+  close_graph ()
+  ;;*)
+(* G?n?ration d'une formule al?atoire *)
 let rec random_formula variables depth =
   if depth = 0 then
     Var (Random.int variables + 1)
@@ -330,7 +257,7 @@ let rec random_formula variables depth =
     | 5 -> Neg (random_formula variables (depth - 1))
     | _ -> Var (Random.int variables + 1);;
 
-(* évaluation d'une formule logique *)
+(* ?valuation d'une formule logique *)
 let rec eval_formula formula values =
   match formula with
   | Top -> true
@@ -347,59 +274,60 @@ let rec eval_formula formula values =
   | Equiv (f1, f2) -> (eval_formula f1 values) = (eval_formula f2 values);;
 
 
-(* Génération d'une population aléatoire de circuits vérifiant une heuristique *)
+(* Dessine une formule centr�e horizontalement autour de x *)
+let draw_formula_centered f x_center y_start x_scale y_spacing =
+  draw_formula f x_center y_start x_scale y_spacing
+;;
 
+(* Affiche plusieurs formules c�te � c�te dans la fen�tre *)
+let draw_population formulas window_width window_height =
+  let n = List.length formulas in
+  let spacing = 100 in
+  let total_scale = window_width - (n + 1) * spacing in
+
+  (* Largeurs relatives de chaque formule *)
+  let widths = List.map formula_width formulas in
+  let total_width_units = List.fold_left ( + ) 0 widths in
+
+  (* Calcule position horizontale centr�e pour chaque formule *)
+  let x_positions =
+    let rec aux acc_x acc = function
+      | [] -> List.rev acc
+      | w :: rest ->
+          let x_center = acc_x + (w * total_scale / total_width_units) / 2 in
+          let next_x = acc_x + (w * total_scale / total_width_units) + spacing in
+          aux next_x (x_center :: acc) rest
+    in
+    aux spacing [] widths
+  in
+
+  (* Dessine toutes les formules avec leurs positions *)
+  List.iter2 (fun f x ->
+    draw_formula_centered f x (window_height - 100) 80 80
+  ) formulas x_positions
+
+
+(* G?n?ration d'une population al?atoire de circuits v?rifiant une formule *)
 let rec generate_population target_formula variables size depth =
   let rec aux acc count =
     if count = 0 then acc
     else
       let candidate = random_formula variables depth in
-      let values = [(1, true); (2, false); (3, true)] in 
+      let values = [(1, true); (2, false); (3, true)] in (* Remplacez par votre propre jeu de valeurs *)
       if eval_formula target_formula values = eval_formula candidate values then
         aux (candidate :: acc) (count - 1)
       else
         aux acc count
   in
-  aux [] size
-;;
-
-let heuri k phi =
-  true
-;;
-
-let mutations phi = phi;;
-
-(*Algorithme génétique *)
-
-let algo_gen phi n nvar depth nbgen= 
-  (*Initialisation de la pop*)
-  let pop = ref (generate_population phi nvar n depth) in
-  for i=1 to nbgen do
-    let pop_mut = List.map mutations !pop in
-    pop := List.filter (heuri i) pop_mut;
-  done;
-  !pop;;
-
-;;
-
-(*let () =
-  Random.self_init ();
-  open_graph " 8000x6000";
-  set_window_title "Circuit Logique";
-
-  let target_formula = random_formula 3 5 in
-  let population = generate_population target_formula 3 40 3 in
-  draw_population_grid_auto_scale (target_formula::population) 2000 1000;
-  ignore (read_key ());
-  close_graph ();;*)
-
+  aux [] size;;
+  
 let () =
   Random.self_init ();
   open_graph " 8000x6000";
   set_window_title "Circuit Logique";
-  let target_formula = random_formula 3 5 in
-  Printf.fprintf stdout "\n %b\n" (sat_solve target_formula 3);
-  draw_population_grid_scaled_per_formula [target_formula] 1500 900;
+
+  let target_formula = And (Var 1, Or (Var 2, Neg (Var 3))) in
+  let population = generate_population target_formula 3 10 3 in
+  draw_population population 2000 1000;
   ignore (read_key ());
   close_graph ();;
-
